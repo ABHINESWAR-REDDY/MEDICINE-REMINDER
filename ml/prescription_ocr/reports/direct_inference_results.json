@@ -1,0 +1,92 @@
+[
+  {
+    "image": "P0001.jpg",
+    "ground_truth": "Nexcital",
+    "raw_ocr": "vocitive",
+    "matched_medicine": "Octive 25Mg Tablet",
+    "match_confidence": 0.86,
+    "confidence_level": "MEDIUM",
+    "match_type": "FUZZY"
+  },
+  {
+    "image": "P0002.jpg",
+    "ground_truth": "Inderen",
+    "raw_ocr": "Under .",
+    "matched_medicine": null,
+    "match_confidence": 0.73,
+    "confidence_level": "LOW",
+    "match_type": "FUZZY"
+  },
+  {
+    "image": "P0004.jpg",
+    "ground_truth": "Losita",
+    "raw_ocr": "Losita .",
+    "matched_medicine": "Losita",
+    "match_confidence": 1.0,
+    "confidence_level": "HIGH",
+    "match_type": "NORMALIZED"
+  },
+  {
+    "image": "P0007.jpg",
+    "ground_truth": "Napa",
+    "raw_ocr": "Napa",
+    "matched_medicine": "Napa",
+    "match_confidence": 1.0,
+    "confidence_level": "HIGH",
+    "match_type": "EXACT"
+  },
+  {
+    "image": "P0008.jpg",
+    "ground_truth": "Econate",
+    "raw_ocr": "Econate",
+    "matched_medicine": "Econate",
+    "match_confidence": 1.0,
+    "confidence_level": "HIGH",
+    "match_type": "EXACT"
+  },
+  {
+    "image": "P0009.jpg",
+    "ground_truth": "Exeptim",
+    "raw_ocr": "Exeptim",
+    "matched_medicine": "Exeptim",
+    "match_confidence": 1.0,
+    "confidence_level": "HIGH",
+    "match_type": "EXACT"
+  },
+  {
+    "image": "P0015.jpg",
+    "ground_truth": "Dexter",
+    "raw_ocr": "Despite",
+    "matched_medicine": "Respite Ax Syrup",
+    "match_confidence": 0.86,
+    "confidence_level": "MEDIUM",
+    "match_type": "FUZZY"
+  },
+  {
+    "image": "P0018.jpg",
+    "ground_truth": "Setra",
+    "raw_ocr": "stern .",
+    "matched_medicine": "Steron 5Mg Tablet",
+    "match_confidence": 0.77,
+    "confidence_level": "MEDIUM",
+    "match_type": "FUZZY"
+  },
+  {
+    "image": "P0019.jpg",
+    "ground_truth": "HPR DS",
+    "raw_ocr": "TIPR D.",
+    "matched_medicine": null,
+    "match_confidence": 0.73,
+    "confidence_level": "LOW",
+    "match_type": "FUZZY"
+  },
+  {
+    "image": "P0020.jpg",
+    "ground_truth": "palpitation",
+    "raw_ocr": "palpitation",
+    "matched_medicine": "Palpitation",
+    "match_confidence": 1.0,
+    "confidence_level": "HIGH",
+    "match_type": "EXACT"
+  }
+]

@@ -1,0 +1,7 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+pillsync.db
+.pytest_cache/
+.vscode/

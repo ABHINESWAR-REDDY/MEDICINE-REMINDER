@@ -1,0 +1,15 @@
+{
+  "python_version": "3.12.10",
+  "os": "Windows 11",
+  "pytorch_version": "2.13.0+cpu",
+  "transformers_version": "4.46.3",
+  "cuda_available": false,
+  "gpu_name": "N/A",
+  "vram_gb": 0.0,
+  "training_device": "cpu",
+  "batch_size": 1,
+  "gradient_accumulation_steps": 8,
+  "effective_batch_size": 8,
+  "mixed_precision": "no",
+  "hardware_detected_via_nvidia_smi": "NVIDIA GeForce MX550 (2048 MiB)"
+}

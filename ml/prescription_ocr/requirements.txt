@@ -1,0 +1,16 @@
+# PillSync Phase 3 - Handwriting OCR ML Pipeline Requirements
+# Dedicated training & evaluation environment (Separate from production backend)
+
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.36.0
+accelerate>=0.25.0
+datasets>=2.15.0
+jiwer>=3.0.0
+Pillow>=10.0.0
+rapidfuzz>=3.5.0
+numpy>=1.24.0
+scipy>=1.11.0
+tqdm>=4.66.0
+matplotlib>=3.8.0
+pandas>=2.1.0

@@ -1,0 +1,266 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ========================================================================= */
+/* CSS Custom Properties & Design Tokens for Light/Dark Themes               */
+/* ========================================================================= */
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-header: rgba(255, 255, 255, 0.95);
+  --bg-sidebar: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --border-subtle: #f1f5f9;
+  --border-default: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --input-text: #0f172a;
+  --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-primary: #020617;
+  --bg-secondary: #0f172a;
+  --bg-surface: #0f172a;
+  --bg-card: #0f172a;
+  --bg-header: rgba(15, 23, 42, 0.92);
+  --bg-sidebar: rgba(15, 23, 42, 0.5);
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-muted: #94a3b8;
+  --border-subtle: #1e293b;
+  --border-default: #334155;
+  --border-strong: #475569;
+  --input-bg: rgba(2, 6, 23, 0.6);
+  --input-border: #334155;
+  --input-text: #f8fafc;
+  --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4);
+}
+
+/* Subtle Global Transition (0.2s) */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* ========================================================================= */
+/* Light Theme Specific Mapping & Surface Hierarchy                          */
+/* ========================================================================= */
+[data-theme="light"] {
+  /* Layout backgrounds */
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+
+  /* Universal Slate Surface Classes (including any opacity fraction) */
+  [class*="bg-slate-950"] {
+    background-color: #f8fafc !important;
+  }
+  [class*="bg-slate-900"] {
+    background-color: #ffffff !important;
+  }
+  [class*="bg-slate-800"] {
+    background-color: #ffffff !important;
+  }
+  [class*="bg-slate-700"] {
+    background-color: #f1f5f9 !important;
+  }
+
+  /* Specific Layout Overrides */
+  header, [class*="bg-slate-900/90"] {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+  }
+  aside, [class*="bg-slate-900/50"] {
+    background-color: #ffffff !important;
+  }
+
+  /* Gradient Banners and Cards in Light Mode */
+  .bg-gradient-to-r,
+  .bg-gradient-to-br,
+  .bg-gradient-to-l,
+  .bg-gradient-to-t,
+  .bg-gradient-to-b {
+    background-image: linear-gradient(to right, #f0fdfa, #ffffff, #f8fafc) !important;
+  }
+  .from-teal-950\/40, .from-slate-900, .from-slate-950 {
+    --tw-gradient-from: #f0fdfa !important;
+  }
+  .via-slate-900\/80, .via-slate-900, .via-slate-950 {
+    --tw-gradient-stops: var(--tw-gradient-from), #ffffff, var(--tw-gradient-to) !important;
+  }
+  .to-slate-900\/60, .to-slate-900, .to-slate-800 {
+    --tw-gradient-to: #f8fafc !important;
+  }
+
+  /* Borders across all slate levels */
+  [class*="border-slate-800"],
+  [class*="border-slate-700"],
+  [class*="border-slate-600"] {
+    border-color: #e2e8f0 !important;
+  }
+
+  /* High-Contrast Readable Text Hierarchy */
+  .text-white {
+    color: #0f172a !important;
+  }
+  .text-slate-100 {
+    color: #0f172a !important;
+  }
+  .text-slate-200 {
+    color: #1e293b !important;
+  }
+  .text-slate-300 {
+    color: #334155 !important;
+  }
+  .text-slate-400 {
+    color: #475569 !important;
+  }
+  .text-slate-500 {
+    color: #64748b !important;
+  }
+  .text-slate-950 {
+    color: #042f2e !important;
+  }
+
+  /* Primary action buttons */
+  .bg-teal-500 {
+    background-color: #0d9488 !important;
+    color: #ffffff !important;
+  }
+  .bg-teal-400 {
+    background-color: #0d9488 !important;
+    color: #ffffff !important;
+  }
+  .hover\:bg-teal-400:hover,
+  .hover\:bg-teal-300:hover {
+    background-color: #0f766e !important;
+    color: #ffffff !important;
+  }
+
+  /* Accent and Badge Colors in Light Mode */
+  .text-teal-300 {
+    color: #0f766e !important;
+  }
+  .text-teal-400 {
+    color: #0d9488 !important;
+  }
+  .bg-teal-500\/10 {
+    background-color: #f0fdfa !important;
+    border-color: #99f6e4 !important;
+    color: #0f766e !important;
+  }
+  .bg-teal-500\/20 {
+    background-color: #ccfbf1 !important;
+    border-color: #5eead4 !important;
+    color: #0f766e !important;
+  }
+  .border-teal-500\/20, .border-teal-500\/30 {
+    border-color: #99f6e4 !important;
+  }
+
+  .text-emerald-300, .text-emerald-400 {
+    color: #047857 !important;
+  }
+  .bg-emerald-500\/10 {
+    background-color: #ecfdf5 !important;
+    border-color: #a7f3d0 !important;
+    color: #047857 !important;
+  }
+
+  .text-purple-300 {
+    color: #6b21a8 !important;
+  }
+  .bg-purple-500\/10 {
+    background-color: #faf5ff !important;
+    border-color: #e9d5ff !important;
+    color: #6b21a8 !important;
+  }
+
+  .text-blue-300 {
+    color: #1e40af !important;
+  }
+  .bg-blue-500\/10 {
+    background-color: #eff6ff !important;
+    border-color: #bfdbfe !important;
+    color: #1e40af !important;
+  }
+
+  .text-amber-300, .text-amber-400 {
+    color: #b45309 !important;
+  }
+  .bg-amber-500\/10 {
+    background-color: #fffbeb !important;
+    border-color: #fde68a !important;
+    color: #b45309 !important;
+  }
+
+  .text-rose-300, .text-rose-400 {
+    color: #be123c !important;
+  }
+  .bg-rose-500\/10 {
+    background-color: #fff1f2 !important;
+    border-color: #fecdd3 !important;
+    color: #be123c !important;
+  }
+
+  /* Interactive & Hover states */
+  [class*="hover:bg-slate-800"]:hover,
+  [class*="hover:bg-slate-900"]:hover,
+  [class*="hover:bg-slate-700"]:hover {
+    background-color: #f1f5f9 !important;
+  }
+  .hover\:border-slate-700:hover,
+  .hover\:border-slate-600:hover {
+    border-color: #cbd5e1 !important;
+  }
+  .hover\:text-white:hover {
+    color: #0f172a !important;
+  }
+  .hover\:text-slate-200:hover {
+    color: #0f172a !important;
+  }
+
+  /* Form controls */
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+  }
+  input::placeholder, textarea::placeholder {
+    color: #94a3b8 !important;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: #0d9488 !important;
+    box-shadow: 0 0 0 1px #0d9488 !important;
+  }
+
+  /* Code / Pre blocks */
+  pre, code {
+    background-color: #f8fafc !important;
+    color: #1e293b !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  /* Cards & Modals */
+  .shadow-2xl, .shadow-xl, .shadow-lg {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+  }
+}

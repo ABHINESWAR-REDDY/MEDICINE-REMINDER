@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: pillsync_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pillsync_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pillsync_secure_password}
+      POSTGRES_DB: ${POSTGRES_DB:-pillsync_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pillsync_user} -d ${POSTGRES_DB:-pillsync_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pillsync_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pillsync_backend
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      PROJECT_NAME: ${PROJECT_NAME:-"PillSync API"}
+      VERSION: ${VERSION:-0.1.0}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      BACKEND_HOST: 0.0.0.0
+      BACKEND_PORT: 8000
+      POSTGRES_SERVER: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER:-pillsync_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pillsync_secure_password}
+      POSTGRES_DB: ${POSTGRES_DB:-pillsync_db}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-pillsync_user}:${POSTGRES_PASSWORD:-pillsync_secure_password}@postgres:5432/${POSTGRES_DB:-pillsync_db}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pillsync_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pillsync_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - pillsync_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  pillsync_network:
+    driver: bridge
