@@ -1,9 +1,9 @@
-"""Full End-to-End verification script against live running backend server (http://127.0.0.1:8000)."""
+"""Full End-to-End verification script against live running backend server (http://127.0.0.1:5000)."""
 
-import httpx as requests
-import sys
+import os
+import requests
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "http://127.0.0.1:5000"
 
 def test_full_live_flow():
     print("==================================================")

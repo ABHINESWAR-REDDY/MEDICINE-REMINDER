@@ -4,7 +4,7 @@ import sys
 import uuid
 import httpx
 
-BASE_URL = "http://127.0.0.1:8000"
+BASE_URL = "http://127.0.0.1:5000"
 
 def run_e2e():
     client = httpx.Client(base_url=BASE_URL, timeout=15)
