@@ -4,6 +4,7 @@ import hashlib
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Tuple
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -51,12 +52,17 @@ class OtpService:
             expires_at=expires_at
         )
 
-        email_service.send_registration_otp(
+        sent = email_service.send_registration_otp(
             to_email=email,
             name=name,
             otp_code=code,
             expire_minutes=settings.EMAIL_OTP_EXPIRE_MINUTES
         )
+        if not sent:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to send verification email. Please try again later."
+            )
         return code
 
     def send_password_reset_otp(self, email: str, name: str) -> str:
@@ -73,12 +79,17 @@ class OtpService:
             expires_at=expires_at
         )
 
-        email_service.send_password_reset_otp(
+        sent = email_service.send_password_reset_otp(
             to_email=email,
             name=name,
             otp_code=code,
             expire_minutes=settings.EMAIL_OTP_EXPIRE_MINUTES
         )
+        if not sent:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to send password reset email. Please try again later."
+            )
         return code
 
     def validate_code(

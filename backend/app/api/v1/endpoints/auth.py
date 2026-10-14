@@ -62,7 +62,7 @@ def check_employee_id(
     response_model=Dict[str, str],
     status_code=status.HTTP_200_OK,
     summary="Send email verification code for new user registration",
-    description="Validates registration inputs and dispatches a 6-digit verification code to the provided email address via Google SMTP.",
+    description="Validates registration inputs and dispatches a 6-digit verification code to the provided email address via Brevo transactional email API.",
 )
 def send_register_otp(
     data: RegisterSendOtpRequest,

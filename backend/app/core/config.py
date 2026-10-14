@@ -93,7 +93,15 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
+    # Brevo HTTP API Configuration (Production transactional emails)
+    BREVO_API_KEY: Optional[str] = None
+    BREVO_API_URL: str = "https://api.brevo.com/v3/smtp/email"
+    BREVO_FROM_EMAIL: Optional[str] = None
+    BREVO_FROM_NAME: Optional[str] = None
+    BREVO_TIMEOUT_SECONDS: float = 15.0
+
     # Google SMTP Email Configuration (App Passwords: https://myaccount.google.com/apppasswords)
+    # Retained for optional local development fallback
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
     SMTP_USER: Optional[str] = None

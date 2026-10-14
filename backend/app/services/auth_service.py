@@ -85,7 +85,7 @@ class AuthService:
                 detail="A user with this email address already exists."
             )
 
-        # Generate, store, and send OTP via Google SMTP
+        # Generate, store, and send OTP via Brevo API / email service
         self.otp_service.send_registration_otp(
             email=data.email,
             name=data.name

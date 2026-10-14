@@ -1,59 +1,226 @@
-"""Email service supporting Google SMTP App Passwords and branded email templates."""
+"""Email service supporting Brevo HTTP API (production transactional emails) and local SMTP fallback."""
 
 import smtplib
 import uuid
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate, formataddr
-from typing import Optional
+from typing import Optional, Dict, Any
+import httpx
+
 from app.core.config import settings
 from app.core.logging import logger
 
 
 class EmailService:
-    """Service handling email delivery via Google SMTP (STARTTLS) and HTML templating."""
+    """
+    Service handling transactional email delivery.
+    - Production: Dispatches via Brevo HTTPS REST API (POST https://api.brevo.com/v3/smtp/email).
+    - Local Development: Dispatches via Brevo HTTP API or falls back to local SMTP (STARTTLS).
+    """
 
     def __init__(self):
+        # Brevo HTTP API Configuration
+        self.brevo_api_key = settings.BREVO_API_KEY
+        self.brevo_api_url = settings.BREVO_API_URL
+        self.brevo_timeout = settings.BREVO_TIMEOUT_SECONDS
+
+        # Sender configuration
+        self.from_email = (
+            settings.BREVO_FROM_EMAIL
+            or settings.SMTP_FROM_EMAIL
+            or settings.SMTP_USER
+            or "noreply@pillsync.app"
+        )
+        self.from_name = (
+            settings.BREVO_FROM_NAME
+            or settings.SMTP_FROM_NAME
+            or "PillSync"
+        )
+
+        # Local SMTP Configuration (fallback for local development only)
         self.host = settings.SMTP_HOST
         self.port = settings.SMTP_PORT
         self.user = settings.SMTP_USER
-        self.password = settings.SMTP_PASSWORD.replace(" ", "").strip() if settings.SMTP_PASSWORD else None
-        self.from_email = settings.SMTP_FROM_EMAIL or settings.SMTP_USER or "noreply@pillsync.app"
-        self.from_name = settings.SMTP_FROM_NAME or "PillSync"
+        self.password = (
+            settings.SMTP_PASSWORD.replace(" ", "").strip()
+            if settings.SMTP_PASSWORD
+            else None
+        )
         self.use_tls = settings.SMTP_TLS
+        self.environment = (settings.ENVIRONMENT or "development").strip().lower()
 
-    def is_configured(self) -> bool:
-        """Check if SMTP credentials (Google App Password) are configured in the environment."""
+    def is_brevo_configured(self) -> bool:
+        """Check if Brevo API credentials and sender details are configured."""
+        return bool(
+            self.brevo_api_key
+            and self.brevo_api_key.strip()
+            and self.from_email
+            and self.from_email.strip()
+        )
+
+    def is_smtp_configured(self) -> bool:
+        """Check if local SMTP credentials are configured."""
         return bool(self.user and self.password)
 
-    def send_email(self, to_email: str, subject: str, html_body: str, text_body: str) -> bool:
+    def is_configured(self) -> bool:
         """
-        Send a multipart MIME email via SMTP directly to the recipient's primary inbox.
-        Falls back to logger in development if SMTP credentials are not configured.
+        Check if email delivery is configured and ready:
+        - In production: Strictly requires BREVO_API_KEY and sender email (no SMTP credentials required).
+        - In non-production: Brevo API or local development SMTP credentials.
         """
-        if not self.is_configured():
-            logger.warning(
-                "SMTP credentials not configured. Email to [%s] logged for development. Subject: %s",
-                to_email,
-                subject
-            )
-            logger.info("EMAIL CONTENT [%s]:\n%s", to_email, text_body)
-            return True
+        if self.environment in ("production", "prod"):
+            return self.is_brevo_configured()
+        return self.is_brevo_configured() or self.is_smtp_configured()
 
+    def send_email(
+        self,
+        to_email: str,
+        subject: str,
+        html_body: str,
+        text_body: str,
+        to_name: Optional[str] = None
+    ) -> bool:
+        """
+        Send a transactional email using Brevo HTTP API (production) or local SMTP fallback.
+        Never logs API keys, passwords, or OTP secrets.
+        Never reports success if Brevo rejects the request.
+        """
+        # 1. Primary path: Brevo HTTP API
+        if self.is_brevo_configured():
+            return self._send_via_brevo_api(
+                to_email=to_email,
+                subject=subject,
+                html_body=html_body,
+                text_body=text_body,
+                to_name=to_name
+            )
+
+        # 2. Production safety guard: In production, Brevo API key is strictly required
+        if self.environment in ("production", "prod"):
+            logger.error(
+                "Email delivery failed: BREVO_API_KEY is not configured in production environment. "
+                "Transactional email to [%s] was aborted.",
+                to_email
+            )
+            return False
+
+        # 3. Local development fallback: SMTP if configured
+        if self.is_smtp_configured():
+            logger.info("BREVO_API_KEY not configured. Falling back to local SMTP for [%s].", to_email)
+            return self._send_via_smtp(
+                to_email=to_email,
+                subject=subject,
+                html_body=html_body,
+                text_body=text_body
+            )
+
+        # 4. Local development unconfigured fallback: Simulate delivery without leaking secrets/OTPs
+        logger.warning(
+            "Neither Brevo API nor SMTP credentials configured in %s mode. "
+            "Simulating delivery for [%s] (no secrets/OTPs logged).",
+            self.environment,
+            to_email
+        )
+        return True
+
+    def _send_via_brevo_api(
+        self,
+        to_email: str,
+        subject: str,
+        html_body: str,
+        text_body: str,
+        to_name: Optional[str] = None
+    ) -> bool:
+        """Dispatch email via Brevo HTTPS API: POST https://api.brevo.com/v3/smtp/email."""
+        headers = {
+            "accept": "application/json",
+            "api-key": self.brevo_api_key.strip(),
+            "content-type": "application/json",
+        }
+
+        recipient: Dict[str, Any] = {"email": to_email}
+        if to_name and str(to_name).strip():
+            recipient["name"] = str(to_name).strip()
+
+        payload = {
+            "sender": {
+                "name": self.from_name,
+                "email": self.from_email,
+            },
+            "to": [recipient],
+            "subject": subject,
+            "htmlContent": html_body,
+            "textContent": text_body,
+        }
+
+        try:
+            with httpx.Client(timeout=self.brevo_timeout) as client:
+                response = client.post(self.brevo_api_url, json=payload, headers=headers)
+
+            if 200 <= response.status_code < 300:
+                logger.info("Successfully sent transactional email to [%s] via Brevo API.", to_email)
+                return True
+
+            # Handle Brevo HTTP error responses without exposing secrets
+            err_detail = "Unknown error"
+            try:
+                err_data = response.json()
+                err_detail = err_data.get("message") or err_data.get("code") or str(err_data)[:120]
+            except Exception:
+                err_detail = response.text[:120] if response.text else "No response body"
+
+            logger.error(
+                "Brevo API rejected email to [%s] with HTTP %s: %s",
+                to_email,
+                response.status_code,
+                err_detail
+            )
+            return False
+
+        except httpx.TimeoutException:
+            logger.error(
+                "Brevo API request timed out sending email to [%s] after %s seconds.",
+                to_email,
+                self.brevo_timeout
+            )
+            return False
+        except httpx.RequestError as exc:
+            logger.error(
+                "Network error connecting to Brevo API for [%s]: %s",
+                to_email,
+                type(exc).__name__
+            )
+            return False
+        except Exception as exc:
+            logger.error(
+                "Unexpected error during Brevo API email delivery for [%s]: %s",
+                to_email,
+                type(exc).__name__
+            )
+            return False
+
+    def _send_via_smtp(
+        self,
+        to_email: str,
+        subject: str,
+        html_body: str,
+        text_body: str
+    ) -> bool:
+        """Send multipart MIME email via local SMTP."""
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject
         msg["From"] = formataddr((self.from_name, self.from_email))
         msg["To"] = to_email
         msg["Date"] = formatdate(localtime=True)
-        msg["Message-ID"] = f"<{uuid.uuid4()}@{self.from_email.split('@')[-1]}>"
-        
-        # Primary Inbox Headers to prevent landing in Spam / Promotional tabs
+        domain = self.from_email.split("@")[-1] if "@" in self.from_email else "pillsync.app"
+        msg["Message-ID"] = f"<{uuid.uuid4()}@{domain}>"
+
         msg["X-Priority"] = "1"
         msg["X-MSMail-Priority"] = "High"
         msg["Importance"] = "High"
         msg["Auto-Submitted"] = "auto-generated"
 
-        # Attach text and HTML parts (UTF-8 encoding)
         msg.attach(MIMEText(text_body, "plain", "utf-8"))
         msg.attach(MIMEText(html_body, "html", "utf-8"))
 
@@ -63,12 +230,14 @@ class EmailService:
                     server.starttls()
                 server.login(self.user, self.password)
                 server.sendmail(self.from_email, [to_email], msg.as_string())
-                logger.info("Successfully sent email to %s (Subject: %s)", to_email, subject)
+                logger.info("Successfully sent email to [%s] via local SMTP.", to_email)
                 return True
         except Exception as exc:
-            logger.error("Failed to send email to %s via SMTP: %s", to_email, str(exc))
-            # In development/fallback, also log the text body so verification is never blocked
-            logger.info("DEVELOPMENT FALLBACK EMAIL [%s]:\n%s", to_email, text_body)
+            logger.error(
+                "Failed to send email to [%s] via local SMTP: %s",
+                to_email,
+                type(exc).__name__
+            )
             return False
 
     def send_registration_otp(
@@ -121,7 +290,7 @@ class EmailService:
         </html>
         """
 
-        return self.send_email(to_email, subject, html_body, text_body)
+        return self.send_email(to_email, subject, html_body, text_body, to_name=name)
 
     def send_password_reset_otp(
         self,
@@ -172,7 +341,7 @@ class EmailService:
         </html>
         """
 
-        return self.send_email(to_email, subject, html_body, text_body)
+        return self.send_email(to_email, subject, html_body, text_body, to_name=name)
 
     def send_caregiver_approval_email(
         self,
@@ -227,7 +396,7 @@ class EmailService:
         </html>
         """
 
-        return self.send_email(to_email, subject, html_body, text_body)
+        return self.send_email(to_email, subject, html_body, text_body, to_name=name)
 
     def send_caregiver_rejection_email(
         self,
@@ -286,7 +455,7 @@ class EmailService:
         </html>
         """
 
-        return self.send_email(to_email, subject, html_body, text_body)
+        return self.send_email(to_email, subject, html_body, text_body, to_name=name)
 
 
 email_service = EmailService()
